@@ -1,0 +1,21 @@
+﻿w: 368px
+h: 520px
+espaço entre : 0 
+total : 22 frames
+
+frames:
+0 - parado dir
+1 - parado esq 
+2 - 11 correndo dir 
+12 - 21 correndo esq
+
+Frames por segundo: recomendo 70 como base, ai vc vai ajustando pra menos se quiser q pareça mais baixo e pra mais se quiser a animação mais lenta
+
+vai ter algo tipo 
+mysprite = this.game.add.sprite(368, 520, 'ninjagirl_spritesheet.png');
+mysprite.frame = 21;
+
+mysprite.animations.add('parado_esq', 1 , 10, true);
+mysprite.animations.add('correndo_dir', [2,3,4,5,6,7,8,9,10,11] , 70, true);
+
+mysprite.animations.play('correndo_dir');

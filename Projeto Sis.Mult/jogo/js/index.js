@@ -22,9 +22,12 @@ var timer, timerEvent, text;
 var enemies;
 var enemie;
 var game;
+var bgmusic;
+var collect_music;
 
 window.onload = function() {
-  game = new Phaser.Game(gameWidth, gameHeight, Phaser.AUTO, "");
+  // game = new Phaser.Game(gameWidth, gameHeight, Phaser.AUTO, "");
+  game = new Phaser.Game(900, 660, Phaser.CANVAS, '');
   game.state.add("Boot", boot);
   game.state.add("GameOver", GameOver);
   game.state.add("PlayGame", playGame);
@@ -40,7 +43,10 @@ boot.prototype = {
     game.load.tilemap('level1', 'assets/games/starstruck/level1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tiles-1', 'assets/games/starstruck/tiles-1.png');
     game.load.image('star', 'assets/games/starstruck/ring2.png');
-    game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
+
+    // game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
+    game.load.spritesheet('dude', 'assets/ninjagirl_spritesheet1.png', 44.16, 62.4);
+
     game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
     //game.load.image('background', 'assets/games/starstruck/background2.png');
     game.load.image('background', 'assets/games/starstruck/backgrounds/gamebackground 10.png');
@@ -49,9 +55,15 @@ boot.prototype = {
     game.load.image('youWinBg', 'img/youWin.jpg');
 
     game.load.image('obstacle', 'enemies/mace_64_64.png', 64, 64);
+
+    game.load.audio('bgmusic', ['assets/audio/naruto.mp3', 'assets/audio/naruto.ogg']);
+    game.load.audio('gomusic', ['assets/audio/gonaruto.mp3', 'assets/audio/gonaruto.ogg']);
+    game.load.audio('collectmusic', ['assets/audio/ring_collect.mp3', 'assets/audio/ring_collect.ogg']);
+
   },
   create: function() {
     this.game.state.start("PlayGame");
+    collect_music = game.add.audio('collectmusic',10);
   }
 };
 
@@ -61,13 +73,18 @@ playGame.prototype = {
 
   },
   create: function() {
+    if (bgmusic){bgmusic.destroy();}
+    bgmusic = game.add.audio('bgmusic');
+    bgmusic.allowMultiple = false;
+
     timer = game.time.create();
 
     // Create a delayed event 1m and 30s from now
-    timerEvent = timer.add( Phaser.Timer.SECOND * 80, endTimer, this);
+    timerEvent = timer.add( Phaser.Timer.SECOND * 90, endTimer, this);
 
     // Start the timer
     timer.start();
+    bgmusic.play();
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
     game.stage.backgroundColor = '#000000';
@@ -87,19 +104,27 @@ playGame.prototype = {
     game.physics.arcade.gravity.y = 250;
 
 
-    player = game.add.sprite(32, 32, 'dude');
-    //player = game.add.sprite(58, 61,  'dude');
+    // player = game.add.sprite(32, 32, 'dude');
+
+    player = game.add.sprite(44.16, 62.4,  'dude');
+    // player.frame = 21;
+
     game.physics.enable(player, Phaser.Physics.ARCADE);
     player.body.bounce.y = 0.2;
     //player.body.gravity.y = 300;
     player.body.collideWorldBounds = true;
-    player.body.setSize(20, 32, 5, 16);
+    player.body.setSize(20, 40, 5, 16);
     game.camera.follow(player);
 
-    player.animations.add('left', [0, 1, 2, 3], 10, true);
-    player.animations.add('turn', [4], 20, true);
-    player.animations.add('right', [5, 6, 7, 8], 10, true);
+    // player.animations.add('left', [0, 1, 2, 3], 10, true);
+    // player.animations.add('turn', [4], 20, true);
+    // player.animations.add('right', [5, 6, 7, 8], 10, true);
 
+    player.animations.add('turn', 1 , 10, true);
+    player.animations.add('right', [2,3,4,5,6,7,8,9] , 40, true);
+    player.animations.add('left', [12,13,14,15,16,17,18] , 40, true);
+
+    player.animations.play('right');
 
     // ---------------- obstáculos ----------------------
 
@@ -121,7 +146,7 @@ playGame.prototype = {
 
     // ------------------ enemies bot --------------------- 
 
-    droidsprite = this.add.sprite(this.world.randomX, 450, 'droid');
+    droidsprite = this.add.sprite((this.world.randomX + 200), 0, 'droid');
     droidsprite.animations.add('walk');
     this.physics.arcade.enable(droidsprite);
     droidsprite.enableBody = true;
@@ -130,7 +155,7 @@ playGame.prototype = {
     droidsprite.body.collideWorldBounds = true;
     game.time.events.repeat(Phaser.Timer.SECOND * 1/2, 1000, moveDroid, game, droidsprite);
 
-    droidsprite1 = this.add.sprite(this.world.randomX, 450, 'droid');
+    droidsprite1 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
     droidsprite1.animations.add('walk');
     this.physics.arcade.enable(droidsprite1);
     droidsprite1.enableBody = true;
@@ -139,7 +164,7 @@ playGame.prototype = {
     droidsprite1.body.collideWorldBounds = true;
     game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite1);
 
-    droidsprite2 = this.add.sprite(this.world.randomX, 450, 'droid');
+    droidsprite2 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
     droidsprite2.animations.add('walk');
     this.physics.arcade.enable(droidsprite2);
     droidsprite2.enableBody = true;
@@ -148,41 +173,59 @@ playGame.prototype = {
     droidsprite2.body.collideWorldBounds = true;
     game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite2);
 
-    // droidsprite3 = this.add.sprite(this.world.randomX, 450, 'droid');
-    // droidsprite3.animations.add('walk');
-    // this.physics.arcade.enable(droidsprite3);
-    // droidsprite3.enableBody = true;
-    // droidsprite3.body.bounce.y = 0.2;
-    // droidsprite3.body.gravity.y = 500;
-    // droidsprite3.body.collideWorldBounds = true;
-    // game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid(droidsprite3), game);
+    droidsprite3 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
+    droidsprite3.animations.add('walk');
+    this.physics.arcade.enable(droidsprite3);
+    droidsprite3.enableBody = true;
+    droidsprite3.body.bounce.y = 0.2;
+    droidsprite3.body.gravity.y = 500;
+    droidsprite3.body.collideWorldBounds = true;
+    game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite3);
 
-    // droidsprite4 = this.add.sprite(this.world.randomX, 450, 'droid');
-    // droidsprite4.animations.add('walk');
-    // this.physics.arcade.enable(droidsprite4);
-    // droidsprite4.enableBody = true;
-    // droidsprite4.body.bounce.y = 0.2;
-    // droidsprite4.body.gravity.y = 500;
-    // droidsprite4.body.collideWorldBounds = true;
-    // game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid(droidsprite4), game);
+    droidsprite4 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
+    droidsprite4.animations.add('walk');
+    this.physics.arcade.enable(droidsprite4);
+    droidsprite4.enableBody = true;
+    droidsprite4.body.bounce.y = 0.2;
+    droidsprite4.body.gravity.y = 500;
+    droidsprite4.body.collideWorldBounds = true;
+    game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite4);
 
-    // droidsprite5 = this.add.sprite(this.world.randomX, 450, 'droid');
-    // droidsprite5.animations.add('walk');
-    // this.physics.arcade.enable(droidsprite5);
-    // droidsprite5.enableBody = true;
-    // droidsprite5.body.bounce.y = 0.2;
-    // droidsprite5.body.gravity.y = 500;
-    // droidsprite5.body.collideWorldBounds = true;
-    // game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid(droidsprite5), game);
+    droidsprite5 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
+    droidsprite5.animations.add('walk');
+    this.physics.arcade.enable(droidsprite5);
+    droidsprite5.enableBody = true;
+    droidsprite5.body.bounce.y = 0.2;
+    droidsprite5.body.gravity.y = 500;
+    droidsprite5.body.collideWorldBounds = true;
+    game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite5);
 
-    // droidsprite6 = this.add.sprite(this.world.randomX, 450, 'droid');
-    // droidsprite6.animations.add('walk');
-    // this.physics.arcade.enable(droidsprite6);
-    // droidsprite6.enableBody = true;
-    // droidsprite6.body.bounce.y = 0.2;
-    // droidsprite6.body.gravity.y = 500;
-    // droidsprite6.body.collideWorldBounds = true;
-    // game.time.events.repeat(Phaser.Timer.SECOND * 1, 10, moveDroid(droidsprite6), game);
+    droidsprite6 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
+    droidsprite6.animations.add('walk');
+    this.physics.arcade.enable(droidsprite6);
+    droidsprite6.enableBody = true;
+    droidsprite6.body.bounce.y = 0.2;
+    droidsprite6.body.gravity.y = 500;
+    droidsprite6.body.collideWorldBounds = true;
+    game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite6);
+
+    droidsprite7 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
+    droidsprite7.animations.add('walk');
+    this.physics.arcade.enable(droidsprite7);
+    droidsprite7.enableBody = true;
+    droidsprite7.body.bounce.y = 0.2;
+    droidsprite7.body.gravity.y = 500;
+    droidsprite7.body.collideWorldBounds = true;
+    game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite7);
+
+    droidsprite8 = this.add.sprite((this.world.randomX + 200), 0, 'droid');
+    droidsprite8.animations.add('walk');
+    this.physics.arcade.enable(droidsprite8);
+    droidsprite8.enableBody = true;
+    droidsprite8.body.bounce.y = 0.2;
+    droidsprite8.body.gravity.y = 500;
+    droidsprite8.body.collideWorldBounds = true;
+    game.time.events.repeat(Phaser.Timer.SECOND * 3, 10, moveDroid, game, droidsprite8);    
 
     // ----------------- anéis --------------------------
 
@@ -247,24 +290,22 @@ playGame.prototype = {
 	
     game.physics.arcade.collide(droidsprite, layer);
     game.physics.arcade.collide(player, droidsprite, gameOver, null, this);
-	game.physics.arcade.collide(droidsprite1, layer);
-    game.physics.arcade.collide(player, droidsprite1, gameOver, null, this);
-	game.physics.arcade.collide(droidsprite2, layer);
-    game.physics.arcade.collide(player, droidsprite2, gameOver, null, this);
-
-    // game.physics.arcade.collide(droidsprite1, layer);
-    // game.physics.arcade.collide(player, droidsprite1, gameOver, null, this);
-    //     game.physics.arcade.collide(droidsprite2, layer);
-    //     game.physics.arcade.collide(player, droidsprite2, gameOver, null, this);
-    //         game.physics.arcade.collide(droidsprite3, layer);
-    //         game.physics.arcade.collide(player, droidsprite3, gameOver, null, this);
-    //             game.physics.arcade.collide(droidsprite4, layer);
-    //             game.physics.arcade.collide(player, droidsprite4, gameOver, null, this);
-    //                 game.physics.arcade.collide(droidsprite5, layer);
-    //                 game.physics.arcade.collide(player, droidsprite5, gameOver, null, this);
-    //                     game.physics.arcade.collide(droidsprite6, layer);
-    //                     game.physics.arcade.collide(player, droidsprite6, gameOver, null, this);
-
+      game.physics.arcade.collide(droidsprite1, layer);
+      game.physics.arcade.collide(player, droidsprite1, gameOver, null, this);
+      	game.physics.arcade.collide(droidsprite2, layer);
+        game.physics.arcade.collide(player, droidsprite2, gameOver, null, this);
+            game.physics.arcade.collide(droidsprite3, layer);
+            game.physics.arcade.collide(player, droidsprite3, gameOver, null, this);
+                game.physics.arcade.collide(droidsprite4, layer);
+                game.physics.arcade.collide(player, droidsprite4, gameOver, null, this);
+                    game.physics.arcade.collide(droidsprite5, layer);
+                    game.physics.arcade.collide(player, droidsprite5, gameOver, null, this);
+                        game.physics.arcade.collide(droidsprite6, layer);
+                        game.physics.arcade.collide(player, droidsprite6, gameOver, null, this);
+                            game.physics.arcade.collide(droidsprite7, layer);
+                            game.physics.arcade.collide(player, droidsprite7, gameOver, null, this);
+                                game.physics.arcade.collide(droidsprite8, layer);
+                                game.physics.arcade.collide(player, droidsprite8, gameOver, null, this);
 
     player.body.velocity.x = 0;
 
@@ -313,7 +354,7 @@ playGame.prototype = {
       jumpTimer = game.time.now + 750;
     }
 
-    if(score == 7){
+    if(score == 3){
       winPhase()
     }
   },
@@ -330,7 +371,11 @@ playGame.prototype = {
 
 GameOver = function(game) {};
  GameOver.prototype = {  
- create: function() {  
+ create: function() {
+    bgmusic.destroy();
+    bgmusic = game.add.audio('gomusic');
+    bgmusic.allowMultiple = false;
+    bgmusic.play();
 
    this.spacebar = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);    
    label = game.add.text(gameWidth / 2 , gameHeight / 2, 'Score: '+score+'\nGAME OVER\nPress SPACE to restart',{ font: '22px Lucida Console', fill: '#fff', align: 'center'});    
@@ -356,6 +401,8 @@ GameWin = function(game) {};
 }};
 
   function collectStar (player, star) {
+
+    collect_music.play();
 
     // Removes the star from the screen
     star.kill();
